@@ -1,3 +1,4 @@
+import 'package:european_countries/screens/country_list_screen.dart';
 import 'package:european_countries/services/provider/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,7 +31,7 @@ class _EuropeanCountriesAppState extends State<EuropeanCountriesApp> {
           title: 'European Countries', // Set the title of the app.
           themeMode: ThemeMode.light, // Set the default theme mode to light.
           theme: context.read<ThemeProvider>().theme,
-          home: null,
+          home: const CountryListScreen(),
         ),
       ),
     );
