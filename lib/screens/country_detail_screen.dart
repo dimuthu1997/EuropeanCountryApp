@@ -9,7 +9,13 @@ class CountryDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(country.name.common)),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          country.name.common,
+          style: const TextStyle(fontSize: 18),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

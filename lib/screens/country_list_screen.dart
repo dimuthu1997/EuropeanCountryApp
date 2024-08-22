@@ -1,9 +1,7 @@
+import 'package:european_countries/services/provider/countr_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:european_countries/utils/widgets/country_list_tile.dart';
-import 'package:dio/dio.dart';
-import 'package:european_countries/model/country_model.dart';
-import 'package:european_countries/services/networks/api_service.dart';
-import 'package:logger/logger.dart';
 
 class CountryListScreen extends StatefulWidget {
   const CountryListScreen({super.key});
@@ -13,87 +11,65 @@ class CountryListScreen extends StatefulWidget {
 }
 
 class _CountryListScreenState extends State<CountryListScreen> {
-  late Future<List<Country>> _countriesFuture;
-  final ApiService _apiService = ApiService(Dio());
-  final Logger _logger = Logger();
-
   @override
   void initState() {
     super.initState();
-    _countriesFuture = _fetchCountries();
-  }
-
-  Future<List<Country>> _fetchCountries() async {
-    try {
-      return await _apiService.getEuropeanCountries();
-    } catch (e) {
-      _logger.e("Failed to fetch countries: $e");
-      return [];
-    }
-  }
-
-  void _sortCountries(List<Country> countries, String criterion) {
-    setState(() {
-      switch (criterion) {
-        case 'Name':
-          countries.sort((a, b) => a.name.common.compareTo(b.name.common));
-          break;
-        case 'Capital':
-          countries.sort((a, b) {
-            if (a.capital.isEmpty && b.capital.isEmpty) return 0;
-            if (a.capital.isEmpty) return -1;
-            if (b.capital.isEmpty) return 1;
-            return a.capital.first.compareTo(b.capital.first);
-          });
-          break;
-        case 'Population':
-          countries.sort((a, b) => a.population.compareTo(b.population));
-          break;
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CountryProvider>(context, listen: false).fetchCountries();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final countryProvider = Provider.of<CountryProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('European Countries'),
+        title: const Text(
+          'European Countries',
+          style: TextStyle(fontSize: 18),
+        ),
         actions: [
           PopupMenuButton<String>(
-            onSelected: (value) async {
-              final countries = await _countriesFuture;
-              _sortCountries(countries, value);
-            },
+            onSelected: (value) => countryProvider.sortCountries(value),
             itemBuilder: (context) => const [
-              PopupMenuItem(value: 'Name', child: Text('Sort by Name')),
-              PopupMenuItem(value: 'Capital', child: Text('Sort by Capital')),
               PopupMenuItem(
-                  value: 'Population', child: Text('Sort by Population')),
+                  value: 'Name',
+                  child: Text(
+                    'Sort by Name',
+                    style: TextStyle(fontSize: 14),
+                  )),
+              PopupMenuItem(
+                  value: 'Capital',
+                  child: Text(
+                    'Sort by Capital',
+                    style: TextStyle(fontSize: 14),
+                  )),
+              PopupMenuItem(
+                  value: 'Population',
+                  child: Text(
+                    'Sort by Population',
+                    style: TextStyle(fontSize: 14),
+                  )),
             ],
           ),
         ],
       ),
-      body: FutureBuilder<List<Country>>(
-        future: _countriesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No data available'));
-          } else {
-            final countries = snapshot.data!;
-            return ListView.builder(
-              itemCount: countries.length,
-              itemBuilder: (context, index) {
-                final country = countries[index];
-                return CountryListTile(country: country);
-              },
-            );
-          }
-        },
-      ),
+      body: countryProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : countryProvider.countries.isEmpty
+              ? const Center(
+                  child: Text(
+                  'No data available',
+                  style: TextStyle(fontSize: 18),
+                ))
+              : ListView.builder(
+                  itemCount: countryProvider.countries.length,
+                  itemBuilder: (context, index) {
+                    final country = countryProvider.countries[index];
+                    return CountryListTile(country: country);
+                  },
+                ),
     );
   }
 }
