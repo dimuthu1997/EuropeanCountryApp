@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:european_countries/utils/widgets/country_list_tile.dart';
 import 'package:dio/dio.dart';
 import 'package:european_countries/model/country_model.dart';
-import 'package:european_countries/screens/country_detail_screen.dart';
 import 'package:european_countries/services/networks/api_service.dart';
-import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 class CountryListScreen extends StatefulWidget {
   const CountryListScreen({super.key});
@@ -14,6 +15,7 @@ class CountryListScreen extends StatefulWidget {
 class _CountryListScreenState extends State<CountryListScreen> {
   late Future<List<Country>> _countriesFuture;
   final ApiService _apiService = ApiService(Dio());
+  final Logger _logger = Logger();
 
   @override
   void initState() {
@@ -25,8 +27,7 @@ class _CountryListScreenState extends State<CountryListScreen> {
     try {
       return await _apiService.getEuropeanCountries();
     } catch (e) {
-      // Handle error
-      print("Error: $e");
+      _logger.e("Failed to fetch countries: $e");
       return [];
     }
   }
@@ -87,18 +88,7 @@ class _CountryListScreenState extends State<CountryListScreen> {
               itemCount: countries.length,
               itemBuilder: (context, index) {
                 final country = countries[index];
-                return ListTile(
-                  leading: Image.network(country.flags.png, width: 50),
-                  title: Text(country.name.common),
-                  subtitle: Text('Capital: ${country.capital.join(', ')}'),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CountryDetailScreen(country: country),
-                    ),
-                  ),
-                );
+                return CountryListTile(country: country);
               },
             );
           }

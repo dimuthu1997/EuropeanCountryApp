@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:european_countries/utils/config.dart';
+import 'package:european_countries/utils/constants/config.dart';
 import 'package:logger/logger.dart';
 
 class DioClient {
